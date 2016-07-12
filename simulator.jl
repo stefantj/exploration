@@ -567,14 +567,6 @@ function simple_sim(num_agents)
     goals= zeros(num_agents)
     t0; t1; t2; t3;
 
-    figure(1); clf();
-    PyPlot.scatter(true_state.locs[2,:]-1, true_state.locs[1,:]-1,color=:green, marker=".")
-    imshow(true_state.map,cmap="gray",interpolation="none")
-    xlabel("X Distance (meters)")
-    ylabel("Y Distance (meters)")
-    title("Initial configuration with $num_agents quads")
-    return 0 
-
     for iter = 1:MAX_ITERS
 
         if(iter > 1)
