@@ -110,10 +110,6 @@ function afghan_village()
     SE_corner = NW_corner - [room_width,room_height]
     map = make_room(SE_corner, NW_corner, "N", door_width,map) 
 
-    # Make a wall going across the right side
-    for i = 1:xlim
-        map[i,150] = 1
-    end
     return map
 end
 
@@ -188,3 +184,110 @@ function simple_environment(map_size)
     end
     return map
 end
+
+# flips a map along the given dimension
+function map_flip(dim, map)
+    new_map = zeros(map)
+    i_max = size(map,1)
+    j_max = size(map,2)
+    for i = 1:size(map,1)
+        for j = 1:size(map,2)
+            if(dim==1) # Flip i dimension
+                new_map[i_max - i + 1, j] = map[i,j]
+            else # Flip j dimension
+                new_map[i, j_max - j + 1] = map[i,j]
+            end
+        end
+    end
+    return new_map
+end
+
+
+# concactenates 4 maps:
+# 1 2
+# 3 4
+function concat_4_maps(map1,map2,map3,map4)
+    i_max1 = size(map1,1); j_max1 = size(map1,2)
+    i_max2 = size(map2,1); j_max2 = size(map2,2)
+    i_max3 = size(map3,1); j_max3 = size(map3,2)
+    i_max4 = size(map4,1); j_max4 = size(map4,2)
+    
+    # check for consistency. This could be relaxed.
+    if(i_max1 != i_max3)
+        println("Error: incompatible first dimension for map 1, 3")
+        return []
+    elseif(i_max2 != i_max4)
+        println("Error: incompatible first dimension for map 2, 4")
+        return []
+    elseif(j_max1 != j_max2)
+        println("Error: incompatible second dimension for map 1, 2")
+        return []
+    elseif(j_max3 != j_max4)
+        println("Error: incompatible second dimension for map 3, 4")
+        return []
+    end
+
+    new_map = zeros(i_max1+i_max2, j_max1+j_max3)
+    for i = 1:i_max1
+        for j = 1:j_max1
+            new_map[i,j] = map1[i,j]
+        end
+        for j = 1:j_max3
+            new_map[i, j_max1+j] = map3[i,j]
+        end
+    end
+    for i = 1:i_max2
+        for j = 1:j_max2
+            new_map[i+i_max1,j] = map2[i, j]
+        end
+        for j = 1:j_max4
+            new_map[i+i_max1,j+j_max2] = map4[i,j] 
+        end
+    end
+
+    return new_map
+end
+
+
+function complicated_afghan_village()
+    map1 = afghan_village()
+    map2 = map_flip(1,map1)
+    map4 = map_flip(2,map2)
+    map3 = map_flip(2,map1)
+    map  = concat_4_maps(map3,map4,map1,map2)
+    # Draw in borders
+    for i = 1:size(map,1)
+        map[i,1] = 1
+        map[i,size(map,2)] = 1
+    end  
+    for j = 1:size(map,2)
+        map[1,j] = 1
+        map[size(map,1),j] = 1
+    end  
+    return map
+end
+
+
+function print_cpp_map(filename, map)
+# maps are 3D
+    f = open(filename,"w")
+    write(f, "float map[1][");
+    write(f, string(size(map,1)));
+    write(f, "][");
+    write(f, string(size(map,2)));
+    write(f, "] = {{");
+    for i=1:size(map,1)
+        write(f,"{");
+        for j = 1:size(map,2)-1
+            write(f, string(map[i,j]))
+            write(f, ", ")
+        end
+        write(f,string(map[i,size(map,2)]));
+        write(f, "},");
+    end
+    write(f, "}};");
+    close(f)
+end
+
+
+
